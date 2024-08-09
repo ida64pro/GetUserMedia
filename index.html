@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save Webcam Image</title>
+</head>
+<body>
+    <h1>Capture and Save Webcam Image</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="capture">Capture</button>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <a id="download" download="webcam-image.png" style="display:none;">Download Image</a>
+
+    <script>
+        // Доступ к видео с веб-камеры
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const downloadLink = document.getElementById('download');
+        const context = canvas.getContext('2d');
+
+        // Запрос доступа к камере
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then((stream) => {
+                video.srcObject = stream;
+            })
+            .catch((err) => {
+                console.error("Error accessing webcam: " + err);
+            });
+
+        // Захват кадра и сохранение изображения
+        captureButton.addEventListener('click', () => {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/png');
+            downloadLink.href = dataURL;
+            downloadLink.click();
+        });
+    </script>
+</body>
+</html>
