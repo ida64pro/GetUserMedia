@@ -10,14 +10,12 @@
     <video id="video" width="640" height="480" autoplay></video>
     <button id="capture">Capture</button>
     <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
-    <a id="download" download="webcam-image.png" style="display:none;">Download Image</a>
 
     <script>
         // Доступ к видео с веб-камеры
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const captureButton = document.getElementById('capture');
-        const downloadLink = document.getElementById('download');
         const context = canvas.getContext('2d');
 
         // Запрос доступа к камере
@@ -29,13 +27,36 @@
                 console.error("Error accessing webcam: " + err);
             });
 
-        // Захват кадра и сохранение изображения
+        // Захват кадра и отправка его на сервер
         captureButton.addEventListener('click', () => {
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             const dataURL = canvas.toDataURL('image/png');
-            downloadLink.href = dataURL;
-            downloadLink.click();
+            const blob = dataURItoBlob(dataURL);
+
+            const formData = new FormData();
+            formData.append('image', blob, 'webcam-image.png');
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Image saved successfully:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         });
-    </script>
-</body>
-</html>
+
+        // Функция для конвертации dataURL в Blob
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: mimeString });
+       
